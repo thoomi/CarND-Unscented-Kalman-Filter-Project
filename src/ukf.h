@@ -16,6 +16,8 @@ public:
   ///* initially set to false, set to true in first call of ProcessMeasurement
   bool is_initialized_;
 
+  double previous_timestamp_;
+
   ///* if this is false, laser measurements will be ignored (except for init)
   bool use_laser_;
 
@@ -30,6 +32,27 @@ public:
 
   ///* predicted sigma points matrix
   MatrixXd Xsig_pred_;
+
+  ///* Predicted radar measurement state
+  VectorXd z_pred_;
+
+  ///* Predicted radar measurement sigma points
+  MatrixXd Zsig_;
+
+  ///* Radar measurment noise matrix
+  MatrixXd R_radar_;
+
+  ///* Radar process noise matrix
+  MatrixXd Q_radar_;
+
+  ///* Predicted radar measurement covariance matrix
+  MatrixXd S_radar_;
+
+  ///* Laser process transformation matrix
+  MatrixXd H_laser_;
+
+  ///* Laser noise matrix
+  MatrixXd R_laser_;
 
   ///* time when the state is true, in us
   long long time_us_;
@@ -61,8 +84,17 @@ public:
   ///* State dimension
   int n_x_;
 
+  ///* Radar measurement state dimension
+  int n_z_;
+
   ///* Augmented state dimension
   int n_aug_;
+
+  ///* Sigma point vector dimension without augmentation
+  int n_sig_;
+
+  ///* sigma point vector dimension with augmentation
+  int n_sig_aug;
 
   ///* Sigma point spreading parameter
   double lambda_;
@@ -77,6 +109,12 @@ public:
    * Destructor
    */
   virtual ~UKF();
+
+  /**
+   * Initialize
+   *
+   */
+  void Initialize(MeasurementPackage first_meas_package);
 
   /**
    * ProcessMeasurement
@@ -102,6 +140,17 @@ public:
    * @param meas_package The measurement at k+1
    */
   void UpdateRadar(MeasurementPackage meas_package);
+
+private:
+
+  MatrixXd GenerateSigmaPoints();
+  MatrixXd PredictSigmaPoints(MatrixXd& rXsig_aug, double delta_t);
+
+  void PredictRadarMeasurment();
+
+private:
+
+  double NormalizeAngle(double angle);
 };
 
 #endif /* UKF_H */
